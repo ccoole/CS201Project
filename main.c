@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 typedef struct foodEntry_struct {
     int foodId;
@@ -20,6 +21,14 @@ typedef struct foodEntry_struct {
 
 foodEntry* CreateFood(int id, char *prod, char *manuf, double calories, double carbs, double fat, double proteins, double gmlServeSize, char *gmlUnit, double regServeSize, char *regUnit){
     foodEntry *tempStruct = (foodEntry*)malloc(sizeof(foodEntry));
+    
+    if(strcmp(gmlUnit, "G")==0){
+        gmlUnit = "Grams";
+    }
+    if(strcmp(gmlUnit, "Ml")==0){
+        gmlUnit = "Millileters";
+    }
+    
     tempStruct->foodId = id;
     tempStruct->prodName = malloc(strlen(prod)+1);
     strcpy(tempStruct->prodName, prod);
@@ -43,22 +52,20 @@ void RemoveDoubleSpaces(char* inputString){
     for(int i =0; i<strlen(inputString); i++){
         if (inputString[i] == '\t'){
             inputString[i] = ' ';
-            printf("######");
         }
-        if (i<(strlen(inputString)-1)){
-            printf("%d %c", i, inputString[i]);
-            printf("....");
-            if ((inputString[i]==' ') && (inputString[i+1] == ' ')){
-                printf("     !!!!!");
-                for (int x = i; x<strlen(inputString); x++){
-                    inputString[x] = inputString[x+1];
-                }
-            }
+    }
+}
+
+void UpperAndLowerCase(char *stringToParse){
+    for(int i =0; i<(strlen(stringToParse)-1); i++){
+        //printf("%c", stringToParse[i]);
+
+        if ((stringToParse[i] == ' ') || (stringToParse[i] == '~')){
+            stringToParse[i+1] = toupper(stringToParse[i+1]);
         }
-        printf("\n");
-        //if (inputString[i] == '\n'){
-        //    inputString[i] = ' ';
-        //}
+        else if (stringToParse[i] != ' '){
+            stringToParse[i+1] = tolower(stringToParse[i+1]);
+        }
     }
 }
 
@@ -73,18 +80,25 @@ void PrintFoodEntry(foodEntry* printEntry){
     printf("Food ID: %d\n", printEntry->foodId);
     printf("Product Name: %s\n", printEntry->prodName);
     printf("Manufacture Name: %s\n", printEntry->manufName);
-    printf("%s of Calories: %lf\n", printEntry->unitTypeGML, printEntry->calNum);
-    printf("%s of Carb: %lf\n", printEntry->unitTypeGML, printEntry->carbNum);
-    printf("%s of Fat: %lf\n", printEntry->unitTypeGML, printEntry->fatNum);
-    printf("%s of Protein: %lf\n", printEntry->unitTypeGML, printEntry->proteinNum);
-    printf("Serving Size is: %lf %s\n", printEntry->serveSizeGML, printEntry->unitTypeGML);
+    printf("Number of Calories: %.2lf\n", printEntry->calNum);
+    printf("Grams of Carbs: %.2lf\n", printEntry->carbNum);
+    printf("Grams of Fat: %.2lf\n", printEntry->fatNum);
+    printf("Grams of Protein: %.2lf\n", printEntry->proteinNum);
+    printf("Serving Size is: %.2lf %s\n", printEntry->serveSizeGML, printEntry->unitTypeGML);
     //printf("%s\n", printEntry->unitTypeGML);
-    printf("The normal Serving Size is: %lf %ss\n", printEntry->normServeSize, printEntry->normUnitType);
-    //printf("%s\n", printEntry->normUnitType);
-    printf("\n\n....%s.....\n\n", printEntry->normUnitType);
+    printf("The normal Serving Size is: %.2lf %s\n", printEntry->normServeSize, printEntry->normUnitType);
+    
+    
+    //printf("%s\t", printEntry->normUnitType);
+    /*printf("\n\n....%s.....\n\n", printEntry->normUnitType);
     int x = 0;
     x = strlen(printEntry->normUnitType);
-    printf("%d\n\n",x);
+    char test[x];
+    for (int i = 0; i < x; i++){
+        test[i] = printEntry->normUnitType[i];
+        printf("%d\n", test[i]);
+    }
+    printf("%d\n\n",x);*/
 }
 
 
@@ -115,7 +129,6 @@ foodEntry* ParseText (char* stringPtr){
     while ((partition = strsep(&tempString, "~")) != NULL){
         if (i==0){
             ID = atoi(partition);
-            //printf("The ID is: %d\n", ID);
         }
         else if (i==1){
             foodName = partition;
@@ -161,39 +174,21 @@ foodEntry* ParseText (char* stringPtr){
 int main(){
     
     FILE* foodData = NULL;
-    foodData = fopen("FoodDatabaseTest.txt", "r");
+    foodData = fopen("FoodDatabase.txt", "r");
     char lineString[250];
     foodEntry *testFood = NULL;
     
     while(fgets(lineString, 250, foodData)){ 
         char *stringPtr = lineString;
-        RemoveDoubleSpaces(stringPtr);
         //printf("%s\n", lineString);
+        RemoveDoubleSpaces(stringPtr);
+        UpperAndLowerCase(stringPtr);
+        //printf("%s\n\n", lineString);
 
         testFood = ParseText(stringPtr);
         PrintFoodEntry(testFood);
     }
     
-
-    /*
-    int y = 20;
-    char *prod = "Pepperoni Pizza";
-    char *manuf = "Dominoes";
-    double cals = 120.0;
-    double carbs = 30.0;
-    double fats = 8.0;
-    double proteins = 11.0;
-    double gmlSize = 3.0;
-    char *gmlUnit = "g";
-    double normSize = 1.5;
-    char *normUnit = "onz";
-    
-    
-    testFood = CreateFood(y, prod, manuf, cals, carbs, fats, proteins, gmlSize, gmlUnit, normSize, normUnit);
-    */
-    
-    //printf("%s\n\n", testFood->normUnitType);
-     
     
     fclose(foodData);
     return 0;
